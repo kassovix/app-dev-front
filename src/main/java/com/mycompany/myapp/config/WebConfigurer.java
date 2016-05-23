@@ -1,8 +1,5 @@
 package com.mycompany.myapp.config;
 
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.servlet.InstrumentedFilter;
-import com.codahale.metrics.servlets.MetricsServlet;
 import com.mycompany.myapp.web.filter.CachingHttpHeadersFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,21 +36,14 @@ public class WebConfigurer implements ServletContextInitializer, EmbeddedServlet
     @Inject
     private JHipsterProperties jHipsterProperties;
 
-    @Autowired(required = false)
-    private MetricRegistry metricRegistry;
-
     @Override
     public void onStartup(ServletContext servletContext) throws ServletException {
         if (env.getActiveProfiles().length != 0) {
             log.info("Web application configuration, using profiles: {}", Arrays.toString(env.getActiveProfiles()));
         }
         EnumSet<DispatcherType> disps = EnumSet.of(DispatcherType.REQUEST, DispatcherType.FORWARD, DispatcherType.ASYNC);
-        initMetrics(servletContext, disps);
         if (env.acceptsProfiles(Constants.SPRING_PROFILE_PRODUCTION)) {
             initCachingHttpHeadersFilter(servletContext, disps);
-        }
-        if (env.acceptsProfiles(Constants.SPRING_PROFILE_DEVELOPMENT)) {
-            initH2Console(servletContext);
         }
         log.info("Web application fully configured");
     }
@@ -116,32 +106,6 @@ public class WebConfigurer implements ServletContextInitializer, EmbeddedServlet
         cachingHttpHeadersFilter.setAsyncSupported(true);
     }
 
-    /**
-     * Initializes Metrics.
-     */
-    private void initMetrics(ServletContext servletContext, EnumSet<DispatcherType> disps) {
-        log.debug("Initializing Metrics registries");
-        servletContext.setAttribute(InstrumentedFilter.REGISTRY_ATTRIBUTE,
-            metricRegistry);
-        servletContext.setAttribute(MetricsServlet.METRICS_REGISTRY,
-            metricRegistry);
-
-        log.debug("Registering Metrics Filter");
-        FilterRegistration.Dynamic metricsFilter = servletContext.addFilter("webappMetricsFilter",
-            new InstrumentedFilter());
-
-        metricsFilter.addMappingForUrlPatterns(disps, true, "/*");
-        metricsFilter.setAsyncSupported(true);
-
-        log.debug("Registering Metrics Servlet");
-        ServletRegistration.Dynamic metricsAdminServlet =
-            servletContext.addServlet("metricsServlet", new MetricsServlet());
-
-        metricsAdminServlet.addMapping("/management/jhipster/metrics/*");
-        metricsAdminServlet.setAsyncSupported(true);
-        metricsAdminServlet.setLoadOnStartup(2);
-    }
-
     @Bean
     @ConditionalOnProperty(name = "jhipster.cors.allowed-origins")
     public CorsFilter corsFilter() {
@@ -154,14 +118,4 @@ public class WebConfigurer implements ServletContextInitializer, EmbeddedServlet
         return new CorsFilter(source);
     }
 
-    /**
-     * Initializes H2 console.
-     */
-    private void initH2Console(ServletContext servletContext) {
-        log.debug("Initialize H2 console");
-        ServletRegistration.Dynamic h2ConsoleServlet = servletContext.addServlet("H2Console", new org.h2.server.web.WebServlet());
-        h2ConsoleServlet.addMapping("/h2-console/*");
-        h2ConsoleServlet.setInitParameter("-properties", "src/main/resources/");
-        h2ConsoleServlet.setLoadOnStartup(1);
-    }
 }

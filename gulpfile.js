@@ -20,8 +20,7 @@ var gulp = require('gulp'),
     gulpIf = require('gulp-if'),
     inject = require('gulp-inject'),
     angularFilesort = require('gulp-angular-filesort'),
-    naturalSort = require('gulp-natural-sort'),
-    bowerFiles = require('main-bower-files');
+    naturalSort = require('gulp-natural-sort');
 
 var handleErrors = require('./gulp/handleErrors'),
     serve = require('./gulp/serve'),
@@ -37,7 +36,7 @@ gulp.task('clean', function () {
 });
 
 gulp.task('copy', function () {
-    return es.merge( 
+    return es.merge(
         gulp.src(config.app + 'i18n/**')
         .pipe(plumber({errorHandler: handleErrors}))
         .pipe(changed(config.dist + 'i18n/'))
@@ -102,7 +101,6 @@ gulp.task('styles', [], function () {
 });
 
 gulp.task('inject', ['inject:dep', 'inject:app']);
-gulp.task('inject:dep', ['inject:test', 'inject:vendor']);
 
 gulp.task('inject:app', function () {
     return gulp.src(config.app + 'index.html')
@@ -110,31 +108,6 @@ gulp.task('inject:app', function () {
             .pipe(naturalSort())
             .pipe(angularFilesort()), {relative: true}))
         .pipe(gulp.dest(config.app));
-});
-
-gulp.task('inject:vendor', function () {
-    var stream = gulp.src(config.app + 'index.html')
-        .pipe(plumber({errorHandler: handleErrors}))
-        .pipe(inject(gulp.src(bowerFiles(), {read: false}), {
-            name: 'bower',
-            relative: true
-        }))
-        .pipe(gulp.dest(config.app));
-
-    return stream;
-});
-
-gulp.task('inject:test', function () {
-    return gulp.src(config.test + 'karma.conf.js')
-        .pipe(plumber({errorHandler: handleErrors}))
-        .pipe(inject(gulp.src(bowerFiles({includeDev: true, filter: ['**/*.js']}), {read: false}), {
-            starttag: '// bower:js',
-            endtag: '// endbower',
-            transform: function (filepath) {
-                return '\'' + filepath.substring(1, filepath.length) + '\',';
-            }
-        }))
-        .pipe(gulp.dest(config.test));
 });
 
 gulp.task('inject:troubleshoot', function () {
@@ -213,7 +186,7 @@ gulp.task('eslint:fix', function () {
         .pipe(gulpIf(util.isLintFixed, gulp.dest(config.app + 'app')));
 });
 
-gulp.task('test', ['inject:test', 'ngconstant:dev'], function (done) {
+gulp.task('test', ['ngconstant:dev'], function (done) {
     new KarmaServer({
         configFile: __dirname + '/' + config.test + 'karma.conf.js',
         singleRun: true
@@ -222,7 +195,6 @@ gulp.task('test', ['inject:test', 'ngconstant:dev'], function (done) {
 
 
 gulp.task('watch', function () {
-    gulp.watch('bower.json', ['install']);
     gulp.watch(['gulpfile.js', 'pom.xml'], ['ngconstant:dev']);
     gulp.watch(config.app + 'content/css/**/*.css', ['styles']);
     gulp.watch(config.app + 'content/images/**', ['images']);
@@ -231,7 +203,7 @@ gulp.task('watch', function () {
 });
 
 gulp.task('install', function () {
-    runSequence(['inject:dep', 'ngconstant:dev'], 'languages', 'inject:app', 'inject:troubleshoot');
+    runSequence(['ngconstant:dev'], 'languages', 'inject:app', 'inject:troubleshoot');
 });
 
 gulp.task('serve', function () {
@@ -239,7 +211,7 @@ gulp.task('serve', function () {
 });
 
 gulp.task('build', ['clean'], function (cb) {
-    runSequence(['copy', 'inject:vendor', 'ngconstant:prod', 'languages'], 'inject:app', 'inject:troubleshoot', 'assets:prod', cb);
+    runSequence(['copy', 'ngconstant:prod', 'languages'], 'inject:app', 'inject:troubleshoot', 'assets:prod', cb);
 });
 
 gulp.task('default', ['serve']);

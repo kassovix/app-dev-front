@@ -29,6 +29,9 @@ spring:
     mvc:
         favicon:
             enabled: false
+        view:
+            prefix: /jsp/
+            suffix: .jsp
     thymeleaf:
         mode: XHTML
 

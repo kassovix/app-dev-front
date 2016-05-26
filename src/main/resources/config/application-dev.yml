@@ -32,13 +32,3 @@ server:
 # ===================================================================
 
 jhipster:
-    mail: # specific JHipster mail property, for standard properties see MailProperties
-        from: app@localhost
-    logging:
-        logstash: # Forward logs to logstash over a socket, used by LoggingConfiguration
-            enabled: false
-            host: localhost
-            port: 5000
-            queueSize: 512
-    swagger: # swagger is enabled. It can be disabled by pasing 'no-swagger' profile at run time as well
-        enabled: false

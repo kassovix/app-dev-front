@@ -106,16 +106,4 @@ public class WebConfigurer implements ServletContextInitializer, EmbeddedServlet
         cachingHttpHeadersFilter.setAsyncSupported(true);
     }
 
-    @Bean
-    @ConditionalOnProperty(name = "jhipster.cors.allowed-origins")
-    public CorsFilter corsFilter() {
-        log.debug("Registering CORS filter");
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = jHipsterProperties.getCors();
-        source.registerCorsConfiguration("/api/**", config);
-        source.registerCorsConfiguration("/v2/api-docs", config);
-        source.registerCorsConfiguration("/oauth/**", config);
-        return new CorsFilter(source);
-    }
-
 }
